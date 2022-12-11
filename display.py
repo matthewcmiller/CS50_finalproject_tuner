@@ -1,9 +1,8 @@
 import pygame
-import random
 
-def display(note, cents):
+def display(display_screen, note, cents):
     # initalize pygame
-    pygame.init()
+    # pygame.init()
 
     # set colors
     black = (0, 0, 0)
@@ -11,14 +10,9 @@ def display(note, cents):
     green = (0, 255, 0)
     
 
-    # set display dimensions
+    # set display dimensions (HMTECH 7" RPi screen)
     display_width = 800
-    display_height = 600
-
-
-    # create display
-    display_screen = pygame.display.set_mode((display_width,display_height))
-    pygame.display.set_caption('Tuner')
+    display_height = 480
 
     # choose font
     note_font = pygame.font.SysFont('arial', 64, bold = True)
@@ -28,16 +22,8 @@ def display(note, cents):
     cents_font = pygame.font.SysFont('arial', 32)
 
     symbol_font = pygame.font.SysFont('arial', 64)
-
-    # running = True
-    # while running:
-    
-    # fill screen
-    display_screen.fill(black)
     
     # choose text to display
-    # note = random.choice(['C1', 'C#7', 'D2', 'D#4', 'E5'])
-    # cents = random.choice([3, 50, 44, -13, -24, 37])
 
     if cents < -5:
         color = red
@@ -80,12 +66,14 @@ def display(note, cents):
         display_screen.blit(plus, plusrect)
 
     # stop running if user quits the window
-    # for event in pygame.event.get():
-    #    if event.type == pygame.QUIT:
-    #        running = False
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            return False
     
+    # if still running, update display and continue running
     pygame.display.flip()
+    return True
+    
+    
 
-    # pygame.quit()
-    return
     

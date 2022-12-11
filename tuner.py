@@ -1,5 +1,5 @@
 # made by matthew miller
-import string
+
 import aubio
 import numpy as np
 import pyaudio
@@ -7,7 +7,6 @@ import math
 import pygame
 from display import display
 
-# leave comments explaining all code
 PITCHES_DICT = {'C-1': 0.0,
                 'C0':16.35, 'C#0':17.32, 'D0':18.35, 'D#0':19.45, 'E0':20.60, 'F0':21.83, 'F#0':23.12, 'G0':24.50, 'G#0':25.96, 'A0':27.50, 'A#0':29.14, 'B0':30.87,
                 'C1':32.70, 'C#1':34.65, 'D1':36.71, 'D#1':38.89, 'E1':41.20, 'F1':43.65, 'F#1':46.25, 'G1':49.00, 'G#1':51.91, 'A1':55.00, 'A#1':58.27, 'B1':61.74,
@@ -21,20 +20,26 @@ PITCHES_DICT = {'C-1': 0.0,
 
 
 def main():
-    key = input("Press r to start tuning! Press q to quit. ")
-    key = key.lower()
-    if key == 'r':
-        tune()
-    return
+    key = input("Press r to start tuning! Press Ctrl + C to quit. ")
+    key = key.lower() 
+    while key != 'r':
+            key = input("Press r to start tuning! Press Ctrl + C to quit. ")
+    tune()
         
 
+def tune():
+    # initalize pygame
+    pygame.init() 
+
+    # create fullscreen display
+    display_screen = pygame.display.set_mode((800, 480)) # ((0, 0), pygame.FULLSCREEN)
+    pygame.display.set_caption('Tuner')
+    #display_screen.fill((0,0,0))
+
+    # initalize pyaudio
+    p = pyaudio.PyAudio()
 
     
-
-def tune():
-    # initalize pyaudio
-    p = pyaudio.PyAudio() 
-
     # open new input stream
     buffer_size = 2000 # 1024
     pyaudio_format = pyaudio.paFloat32
@@ -63,9 +68,14 @@ def tune():
     running = True
     while running:
         try:
-            audiobuffer = stream.read(buffer_size, False) # read buffer_size from stream
-            signal = np.frombuffer(audiobuffer, dtype=np.float32) # get signal using numpy
+            # fill display
+            display_screen.fill((0,0,0))
+            
+            # read buffer_size from stream and get signal using numpy
+            audiobuffer = stream.read(buffer_size, False) 
+            signal = np.frombuffer(audiobuffer, dtype=np.float32)
 
+            # find pitch of signal
             pitch = pitch_o(signal)[0] # find pitch of signal
             
             if pitch > 0 and pitch < 8000: # only use acceptable frequencies
@@ -78,14 +88,6 @@ def tune():
             else:
                 continue 
             
-            # genereate message based on cents value, distance from desired pitch
-            if cents > -6 and cents <6: 
-                statement = 'good!'
-            elif cents < -5:
-                statement = 'up!'
-            else:
-                statement = 'down!'
-
             # count how many times that note has been heard
             if previous_note == note:
                 count_note += 1
@@ -94,16 +96,13 @@ def tune():
                 count_note = 0
 
             # if note heard more than THRESHOLD times, display it
-            if count_note > THRESHOLD:
-                print(f"{note} ({cents}) - {statement}") # threshold for showing pitch C-1 is frequency 0.0
-                display(note, cents)
-                # stop running if user quits the window
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        running = False
-        
+            if count_note > THRESHOLD:                
+                running = display(display_screen, note, cents)
+            else:
+                pygame.display.flip()
+            
         # stop recording on interrupt
-        except KeyboardInterrupt: # or key == 'q'
+        except KeyboardInterrupt:
             print(" exiting")
             break
         
